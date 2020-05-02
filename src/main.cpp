@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "libusb_wrappers.hpp"
+#include "link_messaging.hpp"
 
 int main()
 {
@@ -8,12 +8,14 @@ int main()
   {
     auto lusb_ctx = cod::make_libusb_context();
     cod::devices_wrapper devs(lusb_ctx);
-    auto desc = devs.get_desc(6940, 3076);
+    auto desc = devs.get_desc(cod::defs::vendor_id, cod::defs::product_id);
     if (desc == std::nullopt)
       return 42;
-    auto dev_hdl = devs.get_dev(6940, 3076);
+    auto dev_hdl = devs.get_dev(cod::defs::vendor_id, cod::defs::product_id);
     if (!dev_hdl)
       return 43;
+    if (!cod::check_device_id<cod::defs>(dev_hdl))
+      return 44;
   }
   catch (const std::exception& e)
   {

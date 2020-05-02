@@ -1,21 +1,5 @@
 #include "libusb_wrappers.hpp"
 
-namespace
-{
-
-  template <typename T>
-  void make_lusb_error(T code)
-  {
-    std::ostringstream err;
-    err
-      << libusb_error_name(static_cast<std::int32_t>(code)) << ": "
-      << libusb_strerror(static_cast<libusb_error>(code));
-    throw std::runtime_error(err.str());
-  }
-
-} // !anonymous namespace
-
-
 namespace cod
 {
 
@@ -44,6 +28,40 @@ namespace cod
   {
     libusb_release_interface(dev_hdl, 0);
     libusb_close(dev_hdl);
+  }
+
+
+  void lusb_write(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat)
+  {
+    auto ret = libusb_control_transfer
+      (dev_hdl.get(), // device handle
+       LIBUSB_ENDPOINT_OUT | // request type
+       LIBUSB_REQUEST_TYPE_CLASS |
+       LIBUSB_RECIPIENT_INTERFACE,
+       LIBUSB_REQUEST_SET_CONFIGURATION, // request
+       0x0200, // value HID_REPORT_TYPE_OUTPUT
+       0x0000, // interface index
+       dat.data(), // payload
+       static_cast<std::uint16_t>(dat.size()), // payload length
+       1000); // 1000ms timeout
+    if (ret < 0)
+      make_lusb_error(ret);
+  }
+
+  std::int32_t lusb_read(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat)
+  {
+    std::int32_t transferred = {};
+    auto ret = libusb_interrupt_transfer
+      (dev_hdl.get(), // device handle
+       LIBUSB_ENDPOINT_IN | // endpoint
+       LIBUSB_RECIPIENT_INTERFACE,
+       dat.data(), // payload
+       static_cast<std::uint16_t>(dat.size()), // payload length,
+       &transferred, // bytes transferred,
+       1000); // 1000ms timeout
+    if (ret < 0)
+      make_lusb_error(ret);
+    return transferred;
   }
 
 

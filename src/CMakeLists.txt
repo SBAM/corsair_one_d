@@ -1,4 +1,4 @@
-file(GLOB HEADERS *.hpp)
+file(GLOB HEADERS *.hpp *.ipp)
 file(GLOB SOURCES *.cpp)
 
 add_executable(corsair_one_d

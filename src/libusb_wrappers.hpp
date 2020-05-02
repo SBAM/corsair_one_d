@@ -1,16 +1,30 @@
 #ifndef CORSAIR_ONE_D_LIBUSB_WRAPPERS_HPP_
 # define CORSAIR_ONE_D_LIBUSB_WRAPPERS_HPP_
 
+# include <array>
 # include <memory>
 # include <optional>
 # include <sstream>
 # include <stdexcept>
 # include <vector>
 
+# if __has_include(<source_location>)
+#  include <source_location>
+using src_loc = std::source_location;
+# else
+#  include <experimental/source_location>
+using src_loc = std::experimental::source_location;
+# endif // __has_include(<source_location>)
+
 # include <libusb.h>
 
 namespace cod
 {
+
+  /// @brief Throws a runtime_error according to given faulty inputs
+  template <typename T>
+  void make_lusb_error(T code, const src_loc& loc = src_loc::current());
+
 
   /// @brief Custom deleter for libusb's context
   struct libusb_context_deleter
@@ -55,6 +69,25 @@ namespace cod
     std::unique_ptr<libusb_device_handle, libusb_dev_hdl_deleter>;
 
 
+  /// shorthand to raw payload type
+  using lusb_msg_t = std::array<std::uint8_t, 64>;
+
+  /**
+   * @brief Writes payload through device handle
+   * @param dev_hdl device handle
+   * @param dat input data (somehow libusb requires mutable memory...)
+   */
+  void lusb_write(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat);
+
+  /**
+   * @brief Reads payload from device handle
+   * @param dev_hdl device handle
+   * @param output data
+   * @return bytes transferred
+   */
+  std::int32_t lusb_read(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat);
+
+
   class devices_wrapper
   {
   public:
@@ -81,5 +114,7 @@ namespace cod
   };
 
 } // !namespace cod
+
+# include "libusb_wrappers.ipp"
 
 #endif // !CORSAIR_ONE_D_LIBUSB_WRAPPERS_HPP_
