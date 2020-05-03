@@ -48,7 +48,7 @@ namespace cod
 
   /// @return coolant temperature
   template <typename T>
-  std::optional<float> get_coolant_temp(const libusb_dev_hdl_uptr& dev_hdl);
+  std::optional<double> get_coolant_temp(const libusb_dev_hdl_uptr& dev_hdl);
 
   /// @brief set top fan to max speed
   template <typename T>

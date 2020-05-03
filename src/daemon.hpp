@@ -7,6 +7,7 @@
 
 # include <boost/asio.hpp>
 
+# include "libsensors_wrappers.hpp"
 # include "link_messaging.hpp"
 # include "signal.hpp"
 
@@ -29,17 +30,23 @@ namespace cod
   {
   public:
     /**
+     * @param sw initialized sensors_wrapper
      * @param dev_hdl device handler
-     * @param temp_threshold temperature threshold, if coolant temperature goes
-     *                       above this value, daemon will trigger a
-     *                       set_top_fan_max_speed call
+     * @param coretemp_threshold if coretemps' max value goes above this value,
+     *                           daemon will trigger a set_top_fan_max_speed
+     *                           call
+     * @param coolant_temp_threshold if coolant temperature goes above this
+     *                               value, daemon will trigger a
+     *                               set_top_fan_max_speed call
      * @param low_speed_delay rechecks coolant temperature delay, used when fan
      *                        is running at low speed
      * @param max_speed_delay rechecks coolant temperature delay, used when fan
      *                        is running at max speed
      */
-    daemon(const libusb_dev_hdl_uptr& dev_hdl,
-           float temp_threshold,
+    daemon(const sensors_wrapper& sw,
+           const libusb_dev_hdl_uptr& dev_hdl,
+           double coretemp_threshold,
+           double coolant_temp_threshold,
            sc::duration low_speed_delay,
            sc::duration max_speed_delay);
     /// @brief invokes stop()
@@ -54,8 +61,10 @@ namespace cod
     void schedule_timer(sc::duration delay);
 
   private:
+    const sensors_wrapper& sw_; ///< libsensors helper
     const libusb_dev_hdl_uptr& dev_hdl_; ///< device handle
-    const float temp_threshold_; ///< temperature threshold
+    const double coretemp_threshold_; ///< coretemp threshold
+    const double coolant_temp_threshold_; ///< coolant temperature threshold
     const sc::duration low_speed_delay_; ///< fan low speed recheck delay
     const sc::duration max_speed_delay_; ///< fan max speed delay
     bio::io_context ctx_; ///< asio context

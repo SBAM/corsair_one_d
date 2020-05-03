@@ -18,6 +18,10 @@ if (NOT CMAKE_CXX_LINK_PIE_SUPPORTED)
   message(FATAL_ERROR "Linker with PIE capabilities required: ${PIE_MSG}")
 endif()
 
+# Add custom find_package search path
+list(APPEND CMAKE_MODULE_PATH
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
+
 # Searches for dependencies
 # - pkg-config
 find_package(PkgConfig REQUIRED)
@@ -25,6 +29,8 @@ find_package(PkgConfig REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 # - libusb
 pkg_check_modules(libusb REQUIRED IMPORTED_TARGET libusb-1.0)
+# - libsensors
+find_package(LibSensors REQUIRED)
 # - Threads
 find_package(Threads REQUIRED)
 

@@ -11,6 +11,7 @@ int main()
 {
   try
   {
+    cod::sensors_wrapper sw;
     auto lusb_ctx = cod::make_libusb_context();
     cod::devices_wrapper devs(lusb_ctx);
     auto desc = devs.get_desc(cod::defs::vendor_id, cod::defs::product_id);
@@ -24,7 +25,7 @@ int main()
     if (!cod::check_has_temp_sensor<cod::defs>(dev_hdl))
       return EXIT_PREVENT_RESTART;
     // if anything above went wrong, daemon shouldn't be restarted
-    cod::daemon codd(dev_hdl, 30, 2s, 10s);
+    cod::daemon codd(sw, dev_hdl, 60, 40, 2s, 10s);
     codd.start();
     cod::sig::wait();
     try

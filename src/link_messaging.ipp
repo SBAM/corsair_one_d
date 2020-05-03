@@ -42,7 +42,7 @@ namespace cod
 
 
   template <typename T>
-  std::optional<float> get_coolant_temp(const libusb_dev_hdl_uptr& dev_hdl)
+  std::optional<double> get_coolant_temp(const libusb_dev_hdl_uptr& dev_hdl)
   {
     lusb_msg_t buf;
     buf.fill(0);
@@ -59,7 +59,7 @@ namespace cod
     buf.fill(0);
     auto rs = lusb_read(dev_hdl, buf);
     if (rs >= 5 && buf[4] > 0 && buf[5] > 0)
-      return static_cast<float>(buf[5]) + static_cast<float>(buf[4]) / 256.f;
+      return static_cast<double>(buf[5]) + static_cast<double>(buf[4]) / 256.;
     else
       return std::nullopt;
   }

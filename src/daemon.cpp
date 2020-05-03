@@ -7,12 +7,16 @@
 namespace cod
 {
 
-  daemon::daemon(const libusb_dev_hdl_uptr& dev_hdl,
-                 float temp_threshold,
+  daemon::daemon(const sensors_wrapper& sw,
+                 const libusb_dev_hdl_uptr& dev_hdl,
+                 double coretemp_threshold,
+                 double coolant_temp_threshold,
                  sc::duration low_speed_delay,
                  sc::duration max_speed_delay) :
+    sw_(sw),
     dev_hdl_(dev_hdl),
-    temp_threshold_(temp_threshold),
+    coretemp_threshold_(coretemp_threshold),
+    coolant_temp_threshold_(coolant_temp_threshold),
     low_speed_delay_(low_speed_delay),
     max_speed_delay_(max_speed_delay),
     work_(std::make_unique<bio_work_guard>(bio::make_work_guard(ctx_))),
@@ -84,34 +88,27 @@ namespace cod
       {
         if (abort_ || ec == bio::error::operation_aborted)
           return;
-        auto ct = get_coolant_temp<defs>(dev_hdl_);
-        if (ct)
+        auto core_temp = sw_.get_max_coretemp();
+        auto cool_temp = get_coolant_temp<defs>(dev_hdl_);
+        if (!core_temp.has_value() || !cool_temp.has_value())
+          // failed to grab temperatures, reschedule check in 100ms
+          schedule_timer(100ms);
+        else
         {
-          if (*ct > temp_threshold_)
+          /// @todo remove me
+          std::cout
+            << "core=" << *core_temp
+            << " (max=" << coretemp_threshold_ << ')'
+            << " coolant=" << *cool_temp
+            << " (max=" << coolant_temp_threshold_ << ')' << std::endl;
+          if (*core_temp > coretemp_threshold_ ||
+              *cool_temp > coolant_temp_threshold_)
           {
-            /// @todo remove me
-            std::cout
-              << "curr_temp=" << std::fixed << std::setprecision(1) << *ct
-              << " > threshold=" << std::fixed << std::setprecision(1)
-              << temp_threshold_ << std::endl;
             set_top_fan_max_speed<defs>(dev_hdl_);
             schedule_timer(max_speed_delay_);
           }
           else
-          {
-            /// @todo remove me
-            std::cout
-              << "curr_temp=" << std::fixed << std::setprecision(1) << *ct
-              << " < threshold=" << std::fixed << std::setprecision(1)
-              << temp_threshold_ << std::endl;
             schedule_timer(low_speed_delay_);
-          }
-        }
-        else
-        {
-          /// @todo remove me
-          std::cout << "failed to grab coolant temperature" << std::endl;
-          schedule_timer(low_speed_delay_);
         }
       };
     timer_.async_wait(std::move(cb));

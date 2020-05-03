@@ -15,5 +15,6 @@ target_compile_definitions(corsair_one_d
 target_link_libraries(corsair_one_d
   PRIVATE
     Boost::system
+    libsensors::libsensors
     PkgConfig::libusb
     Threads::Threads)
