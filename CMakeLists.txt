@@ -31,6 +31,8 @@ find_package(Boost REQUIRED COMPONENTS system)
 pkg_check_modules(libusb REQUIRED IMPORTED_TARGET libusb-1.0)
 # - libsensors
 find_package(LibSensors REQUIRED)
+# - spdlog
+find_package(spdlog REQUIRED)
 # - Threads
 find_package(Threads REQUIRED)
 

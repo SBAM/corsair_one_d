@@ -1,14 +1,14 @@
 #include <cstdlib>
-#include <iomanip>
-#include <iostream>
 
 #include "daemon.hpp"
+#include "log.hpp"
 
 constexpr int EXIT_RESTART = EXIT_FAILURE;
 constexpr int EXIT_PREVENT_RESTART = 2;
 
 int main()
 {
+  setup_logger();
   try
   {
     cod::sensors_wrapper sw;
@@ -35,14 +35,17 @@ int main()
     catch (const std::exception& e)
     {
       // stop may convey an exception thrown in daemon thread, restart
-      std::cerr << "daemon::stop() exception=[" << e.what() << ']' << std::endl;
+      spdlog::error("daemon::stop() exception=[{}]", e.what());
+      spdlog::apply_all([&](auto logger) { logger->flush(); });
       return EXIT_RESTART;
     }
   }
   catch (const std::exception& e)
   {
-    std::cerr << "main() exception=[" << e.what() << ']' << std::endl;
+    spdlog::error("main() exception=[{}]", e.what());
+    spdlog::apply_all([&](auto logger) { logger->flush(); });
     return EXIT_PREVENT_RESTART;
   }
+  spdlog::apply_all([&](auto logger) { logger->flush(); });
   return EXIT_SUCCESS;
 }

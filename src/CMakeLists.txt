@@ -17,4 +17,5 @@ target_link_libraries(corsair_one_d
     Boost::system
     libsensors::libsensors
     PkgConfig::libusb
+    spdlog::spdlog
     Threads::Threads)

@@ -1,8 +1,5 @@
-/// @todo remove me
-#include <iomanip>
-#include <iostream>
-
 #include "daemon.hpp"
+#include "log.hpp"
 
 namespace cod
 {
@@ -95,12 +92,10 @@ namespace cod
           schedule_timer(100ms);
         else
         {
-          /// @todo remove me
-          std::cout
-            << "core=" << *core_temp
-            << " (max=" << coretemp_threshold_ << ')'
-            << " coolant=" << *cool_temp
-            << " (max=" << coolant_temp_threshold_ << ')' << std::endl;
+          spdlog::debug("core={:.2f} (max={:.2f}) -- "
+                        "coolant={:.2f} (max={:.2f})",
+                        *core_temp, coretemp_threshold_,
+                        *cool_temp, coolant_temp_threshold_);
           if (*core_temp > coretemp_threshold_ ||
               *cool_temp > coolant_temp_threshold_)
           {

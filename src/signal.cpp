@@ -1,6 +1,7 @@
-/// @todo remove me
-#include <iostream>
+#include <string>
+#include <unordered_map>
 
+#include "log.hpp"
 #include "signal.hpp"
 
 namespace cod
@@ -38,10 +39,22 @@ namespace cod
   }
 
 
-  void sig::handler(int)
+  void sig::handler(int sig_id)
   {
-    /// @todo remove me
-    std::cout << "signal caught" << std::endl;
+    static const std::unordered_map<int, std::string> map_ =
+      {
+        { SIGTERM, "SIGTERM" },
+        { SIGSEGV, "SIGSEGV" },
+        { SIGINT,  "SIGINT" },
+        { SIGILL,  "SIGILL" },
+        { SIGABRT, "SIGABRT" },
+        { SIGFPE,  "SIGFPE" }
+      };
+    auto it = map_.find(sig_id);
+    if (it != map_.end())
+      spdlog::debug("signal {}({}) was raised", it->second, sig_id);
+    else
+      spdlog::warn("unknown signal ({}) was raised", sig_id);
     leave();
   }
 
