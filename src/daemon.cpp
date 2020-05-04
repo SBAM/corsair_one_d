@@ -1,5 +1,4 @@
 #include "daemon.hpp"
-#include "log.hpp"
 
 namespace cod
 {
@@ -88,17 +87,21 @@ namespace cod
         auto core_temp = sw_.get_max_coretemp();
         auto cool_temp = get_coolant_temp<defs>(dev_hdl_);
         if (!core_temp.has_value() || !cool_temp.has_value())
+        {
           // failed to grab temperatures, reschedule check in 100ms
+          spdlog::warn("failed to actualize temperatures");
           schedule_timer(100ms);
+        }
         else
         {
-          spdlog::debug("core={:.2f} (max={:.2f}) -- "
-                        "coolant={:.2f} (max={:.2f})",
-                        *core_temp, coretemp_threshold_,
-                        *cool_temp, coolant_temp_threshold_);
+          spdlog::info("core={:.2f}C (max={:.2f}C) -- "
+                       "coolant={:.2f}C (max={:.2f}C)",
+                       *core_temp, coretemp_threshold_,
+                       *cool_temp, coolant_temp_threshold_);
           if (*core_temp > coretemp_threshold_ ||
               *cool_temp > coolant_temp_threshold_)
           {
+            spdlog::info("threshold exceeded, set max top fan speed");
             set_top_fan_max_speed<defs>(dev_hdl_);
             schedule_timer(max_speed_delay_);
           }

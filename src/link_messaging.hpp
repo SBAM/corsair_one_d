@@ -2,6 +2,7 @@
 # define CORSAIR_ONE_D_LINK_MESSAGING_HPP_
 
 # include "libusb_wrappers.hpp"
+# include "log.hpp"
 
 namespace cod
 {
@@ -15,7 +16,6 @@ namespace cod
       static constexpr std::uint16_t vendor_id = 0x1b1c;
       static constexpr std::uint16_t product_id = 0x0c04;
       static constexpr std::uint8_t device_id = 0x50;
-      static constexpr std::uint8_t cmd_id_init = 0x81;
       static constexpr std::uint8_t cmd_read_byte = 0x07;
       static constexpr std::uint8_t cmd_read_short = 0x09;
       static constexpr std::uint8_t cmd_write_byte = 0x06;

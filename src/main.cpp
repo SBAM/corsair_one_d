@@ -1,14 +1,13 @@
 #include <cstdlib>
 
 #include "daemon.hpp"
-#include "log.hpp"
 
 constexpr int EXIT_RESTART = EXIT_FAILURE;
 constexpr int EXIT_PREVENT_RESTART = 2;
 
 int main()
 {
-  setup_logger();
+  log_guard lg;
   try
   {
     cod::sensors_wrapper sw;
@@ -17,29 +16,35 @@ int main()
     auto desc = devs.get_desc(cod::defs::vendor_id, cod::defs::product_id);
     if (desc == std::nullopt)
     {
-      spdlog::warn("main() failed to grab description for device with "
-                   "vendor_id={0:#x} product_id={0:#x}",
+      spdlog::warn("failed to grab description for device with "
+                   "vendor_id={:#04x} product_id={:#04x}",
                    cod::defs::vendor_id, cod::defs::product_id);
       return EXIT_PREVENT_RESTART;
     }
     auto dev_hdl = devs.get_dev(cod::defs::vendor_id, cod::defs::product_id);
     if (!dev_hdl)
     {
-      spdlog::warn("main() failed to get USB device handler");
-      return EXIT_PREVENT_RESTART;
-    }
-    if (!cod::check_device_id<cod::defs>(dev_hdl))
-    {
-      spdlog::warn("main() device handle doesn't match device_id={0:#x}",
-                   cod::defs::device_id);
-      return EXIT_PREVENT_RESTART;
-    }
-    if (!cod::check_has_temp_sensor<cod::defs>(dev_hdl))
-    {
-      spdlog::warn("main() device has no temperature sensor");
+      spdlog::warn("failed to get USB device handler");
       return EXIT_PREVENT_RESTART;
     }
     // if anything above went wrong, daemon shouldn't be restarted
+    if (!cod::check_device_id<cod::defs>(dev_hdl))
+    {
+      /**
+       * @note this mismatch can occur under circumstances not yet understood:
+       *        - a request times out
+       *        - daemon restarts
+       *        - this check fails
+       *       let's work this around with a restart exit code
+       */
+      spdlog::warn("device_id mismatch");
+      return EXIT_RESTART;
+    }
+    if (!cod::check_has_temp_sensor<cod::defs>(dev_hdl))
+    {
+      spdlog::warn("device has no temperature sensor");
+      return EXIT_RESTART;
+    }
     cod::daemon codd(sw, dev_hdl, 60, 40, 2s, 10s);
     codd.start();
     cod::sig::wait();
@@ -59,5 +64,6 @@ int main()
     spdlog::error("main() exception=[{}]", e.what());
     return EXIT_PREVENT_RESTART;
   }
+  lg.quiet_exit(true);
   return EXIT_SUCCESS;
 }

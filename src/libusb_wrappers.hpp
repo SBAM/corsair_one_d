@@ -23,7 +23,7 @@ namespace cod
 
   /// @brief Throws a runtime_error according to given faulty inputs
   template <typename T>
-  void make_lusb_error(T code, const src_loc& loc = src_loc::current());
+  void make_lusb_error(T code, const src_loc& loc);
 
 
   /// @brief Custom deleter for libusb's context
@@ -76,16 +76,22 @@ namespace cod
    * @brief Writes payload through device handle
    * @param dev_hdl device handle
    * @param dat input data (somehow libusb requires mutable memory...)
+   * @param loc call source location
    */
-  void lusb_write(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat);
+  void lusb_write(const libusb_dev_hdl_uptr& dev_hdl,
+                  lusb_msg_t& dat,
+                  const src_loc& loc = src_loc::current());
 
   /**
    * @brief Reads payload from device handle
    * @param dev_hdl device handle
    * @param output data
+   * @param loc call source location
    * @return bytes transferred
    */
-  std::int32_t lusb_read(const libusb_dev_hdl_uptr& dev_hdl, lusb_msg_t& dat);
+  std::int32_t lusb_read(const libusb_dev_hdl_uptr& dev_hdl,
+                         lusb_msg_t& dat,
+                         const src_loc& loc = src_loc::current());
 
 
   class devices_wrapper

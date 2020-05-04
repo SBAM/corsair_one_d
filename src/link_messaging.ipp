@@ -4,6 +4,7 @@ namespace cod
   template <typename T>
   bool check_device_id(const libusb_dev_hdl_uptr& dev_hdl)
   {
+    spdlog::debug("verifying device_id={:#04x}", T::device_id);
     lusb_msg_t buf;
     buf.fill(0);
     buf[0] = 3; // length
@@ -15,7 +16,11 @@ namespace cod
     buf.fill(0);
     auto rs = lusb_read(dev_hdl, buf);
     if (rs >= 3)
-      return buf[2] == T::device_id;
+    {
+      auto dev_id = buf[2];
+      spdlog::debug("got device_id={:#04x}", dev_id);
+      return dev_id == T::device_id;
+    }
     else
       return false;
   }
@@ -24,6 +29,7 @@ namespace cod
   template <typename T>
   bool check_has_temp_sensor(const libusb_dev_hdl_uptr& dev_hdl)
   {
+    spdlog::debug("verifying device has coolant temperature sensor");
     lusb_msg_t buf;
     buf.fill(0);
     buf[0] = 3; // length
@@ -35,7 +41,11 @@ namespace cod
     buf.fill(0);
     auto rs = lusb_read(dev_hdl, buf);
     if (rs >= 3)
-      return buf[2] > 0;
+    {
+      auto sc = buf[2];
+      spdlog::debug("device temp_sensor_count={:d}", sc);
+      return sc > 0;
+    }
     else
       return false;
   }
@@ -44,6 +54,7 @@ namespace cod
   template <typename T>
   std::optional<double> get_coolant_temp(const libusb_dev_hdl_uptr& dev_hdl)
   {
+    spdlog::debug("querying coolant temperature");
     lusb_msg_t buf;
     buf.fill(0);
     buf[0] = 7; // length
@@ -58,8 +69,13 @@ namespace cod
     // retrieve command response
     buf.fill(0);
     auto rs = lusb_read(dev_hdl, buf);
-    if (rs >= 5 && buf[4] > 0 && buf[5] > 0)
-      return static_cast<double>(buf[5]) + static_cast<double>(buf[4]) / 256.;
+    if (rs >= 5 && (buf[4] > 0 || buf[5] > 0))
+    {
+      auto ct =
+        static_cast<double>(buf[5]) + static_cast<double>(buf[4]) / 256.;
+      spdlog::debug("coolant_temperature={:.2f}C", ct);
+      return ct;
+    }
     else
       return std::nullopt;
   }
@@ -68,6 +84,7 @@ namespace cod
   template <typename T>
   void set_top_fan_max_speed(const libusb_dev_hdl_uptr& dev_hdl)
   {
+    spdlog::debug("set_top_fan_max_speed");
     lusb_msg_t buf;
     buf.fill(0);
     buf[0] = 12; // length
