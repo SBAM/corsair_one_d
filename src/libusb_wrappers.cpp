@@ -1,5 +1,4 @@
 #include "libusb_wrappers.hpp"
-#include "log.hpp"
 
 namespace cod
 {
@@ -57,7 +56,7 @@ namespace cod
        0x0000, // interface index
        dat.data(), // payload
        static_cast<std::uint16_t>(dat.size()), // payload length
-       5000); // 5s timeout
+       1000); // 1s timeout
     if (ret < 0)
       make_lusb_error(ret, loc);
   }
@@ -66,21 +65,31 @@ namespace cod
                          lusb_msg_t& dat,
                          const src_loc& loc)
   {
-    std::int32_t transferred = {};
+    std::int32_t transferred {};
     std::uint8_t endpoint =
       static_cast<std::uint8_t>(LIBUSB_ENDPOINT_IN) |        // 0x80
       static_cast<std::uint8_t>(LIBUSB_RECIPIENT_INTERFACE); // 0x01
-    auto ret = libusb_interrupt_transfer
-      (dev_hdl.get(), // device handle
-       endpoint, // endpoint
-       dat.data(), // payload
-       static_cast<std::uint16_t>(dat.size()), // payload length,
-       &transferred, // bytes transferred,
-       5000); // 5s timeout
-    spdlog::trace("  <<<< {:pn}... read_size={}",
-                  spdlog::to_hex(std::begin(dat),
-                                 std::begin(dat) + 16),
-                  transferred);
+    std::size_t attempts = 5;
+    int ret {};
+    while (attempts-- > 0)
+    {
+      ret = libusb_interrupt_transfer
+        (dev_hdl.get(), // device handle
+         endpoint, // endpoint
+         dat.data(), // payload
+         static_cast<std::uint16_t>(dat.size()), // payload length,
+         &transferred, // bytes transferred,
+         1000); // 1s timeout
+      spdlog::trace("  <<<< {:pn}... read_size={}",
+                    spdlog::to_hex(std::begin(dat),
+                                   std::begin(dat) + 16),
+                    transferred);
+      if (ret == LIBUSB_SUCCESS)
+        break;
+      else
+        if (attempts > 0)
+          spdlog::warn("{}", make_lusb_error_str(ret, loc));
+    }
     if (ret < 0)
       make_lusb_error(ret, loc);
     return transferred;
@@ -99,6 +108,12 @@ namespace cod
       lusb_devs_.reset(devs);
       devs_.insert(devs_.begin(), devs, devs + dev_count);
     }
+  }
+
+
+  devices_wrapper::~devices_wrapper()
+  {
+    // prevent inlining and subsequent -Werror=inline
   }
 
 

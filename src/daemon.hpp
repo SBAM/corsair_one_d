@@ -70,7 +70,7 @@ namespace cod
     bio::io_context ctx_; ///< asio context
     work_guard_uptr work_; ///< context's work
     bio::steady_timer timer_; ///< delayed tasks timer
-    std::thread thread_; ///<< reactor thread
+    std::thread thread_; ///< reactor thread
     bool abort_; ///< abort flag, true upon stop request
     std::exception_ptr eptr_; ///< stores execption thrown by daemon
   };

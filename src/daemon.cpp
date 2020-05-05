@@ -85,23 +85,40 @@ namespace cod
         if (abort_ || ec == bio::error::operation_aborted)
           return;
         auto core_temp = sw_.get_max_coretemp();
-        auto cool_temp = get_coolant_temp<defs>(dev_hdl_);
-        if (!core_temp.has_value() || !cool_temp.has_value())
+        if (!core_temp.has_value())
         {
-          // failed to grab temperatures, reschedule check in 100ms
-          spdlog::warn("failed to actualize temperatures");
+          spdlog::warn("failed to actualize coretemp");
           schedule_timer(100ms);
+          return;
+        }
+        std::optional<double> cool_temp;
+        try
+        {
+          cool_temp = get_coolant_temp<defs>(dev_hdl_);
+        }
+        catch (const std::exception& e)
+        {
+          spdlog::warn("failed to grab coolant temperature [{}]", e.what());
+          schedule_timer(100ms);
+          return;
+        }
+        if (!cool_temp.has_value())
+        {
+          spdlog::warn("failed to actualize coolant temperature");
+          schedule_timer(100ms);
+          return;
         }
         else
         {
-          spdlog::info("core={:.2f}C (max={:.2f}C) -- "
-                       "coolant={:.2f}C (max={:.2f}C)",
-                       *core_temp, coretemp_threshold_,
-                       *cool_temp, coolant_temp_threshold_);
           if (*core_temp > coretemp_threshold_ ||
               *cool_temp > coolant_temp_threshold_)
           {
-            spdlog::info("threshold exceeded, set max top fan speed");
+            spdlog::info("threshold exceeded, "
+                         "core={:.2f}C (max={:.2f}C) -- "
+                         "coolant={:.2f}C (max={:.2f}C) "
+                         "==> set max top fan speed",
+                         *core_temp, coretemp_threshold_,
+                         *cool_temp, coolant_temp_threshold_);
             set_top_fan_max_speed<defs>(dev_hdl_);
             schedule_timer(max_speed_delay_);
           }

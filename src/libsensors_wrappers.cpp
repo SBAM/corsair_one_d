@@ -1,8 +1,8 @@
 #include <cstring>
-#include <sstream>
 #include <stdexcept>
 
 #include "libsensors_wrappers.hpp"
+#include "log.hpp"
 
 namespace cod
 {
@@ -11,11 +11,8 @@ namespace cod
   {
     auto si_res = sensors_init(nullptr);
     if (si_res != 0)
-    {
-      std::ostringstream err;
-      err << "sensors_init() failure=" << sensors_strerror(si_res);
-      throw std::runtime_error(err.str());
-    }
+      throw std::runtime_error
+        (fmt::format("sensors_init() failure={}", sensors_strerror(si_res)));
     // retrieve all coretemp's INPUT sub-features
     int dc_idx = 0; // detected chip list index
     while (auto dc = sensors_get_detected_chips(nullptr, &dc_idx))
@@ -37,6 +34,9 @@ namespace cod
     if (coretemp_sfeats_.empty())
       throw std::runtime_error("no coretemp returned by libsensors, "
                                "this might be fixed with sensors-detect");
+    else
+      spdlog::debug("libsensors returned {d} coretemp sub-features",
+                    coretemp_sfeats_.size());
   }
 
 
@@ -48,6 +48,7 @@ namespace cod
 
   std::optional<double> sensors_wrapper::get_max_coretemp() const
   {
+    spdlog::debug("querying max coretemp");
     std::optional<double> res;
     for (auto& curr : coretemp_sfeats_)
     {
@@ -56,6 +57,8 @@ namespace cod
       if (gv_res == 0)
         res = (res ? std::max(*res, tmp) : tmp);
     }
+    if (res)
+      spdlog::debug("max_coretemp={:.2f}C", *res);
     return res;
   }
 

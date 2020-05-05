@@ -2,9 +2,9 @@
 # define CORSAIR_ONE_D_LIBUSB_WRAPPERS_HPP_
 
 # include <array>
+# include <filesystem>
 # include <memory>
 # include <optional>
-# include <sstream>
 # include <stdexcept>
 # include <vector>
 
@@ -18,8 +18,14 @@ using src_loc = std::experimental::source_location;
 
 # include <libusb.h>
 
+# include "log.hpp"
+
 namespace cod
 {
+
+  /// @return formated error that explains faulty inputs
+  template <typename T>
+  std::string make_lusb_error_str(T code, const src_loc& loc);
 
   /// @brief Throws a runtime_error according to given faulty inputs
   template <typename T>
@@ -104,6 +110,7 @@ namespace cod
 
   public:
     devices_wrapper(const libusb_context_uptr& ctx);
+    ~devices_wrapper();
     devices_wrapper(devices_wrapper&&) = default;
     devices_wrapper(const devices_wrapper&) = delete;
     devices_wrapper& operator=(const devices_wrapper&) = delete;
