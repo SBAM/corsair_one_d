@@ -41,15 +41,17 @@ namespace cod
                   lusb_msg_t& dat,
                   const src_loc& loc)
   {
-    spdlog::trace("  >>>> {:pn} write_size={}",
+    spdlog::trace("  >>>> {:pn}... write_size={}",
                   spdlog::to_hex(std::begin(dat),
                                  std::begin(dat) + 16),
                   dat.size());
+    std::uint8_t req_type =
+      static_cast<std::uint8_t>(LIBUSB_ENDPOINT_OUT) |        // 0x00
+      static_cast<std::uint8_t>(LIBUSB_RECIPIENT_INTERFACE) | // 0x01
+      static_cast<std::uint8_t>(LIBUSB_REQUEST_TYPE_CLASS);   // (0x01 << 5)
     auto ret = libusb_control_transfer
       (dev_hdl.get(), // device handle
-       LIBUSB_ENDPOINT_OUT | // request type
-       LIBUSB_REQUEST_TYPE_CLASS |
-       LIBUSB_RECIPIENT_INTERFACE,
+       req_type, // request type
        LIBUSB_REQUEST_SET_CONFIGURATION, // request
        0x0200, // value HID_REPORT_TYPE_OUTPUT
        0x0000, // interface index
@@ -65,15 +67,17 @@ namespace cod
                          const src_loc& loc)
   {
     std::int32_t transferred = {};
+    std::uint8_t endpoint =
+      static_cast<std::uint8_t>(LIBUSB_ENDPOINT_IN) |        // 0x80
+      static_cast<std::uint8_t>(LIBUSB_RECIPIENT_INTERFACE); // 0x01
     auto ret = libusb_interrupt_transfer
       (dev_hdl.get(), // device handle
-       LIBUSB_ENDPOINT_IN | // endpoint
-       LIBUSB_RECIPIENT_INTERFACE,
+       endpoint, // endpoint
        dat.data(), // payload
        static_cast<std::uint16_t>(dat.size()), // payload length,
        &transferred, // bytes transferred,
        5000); // 5s timeout
-    spdlog::trace("  <<<< {:pn} read_size={}",
+    spdlog::trace("  <<<< {:pn}... read_size={}",
                   spdlog::to_hex(std::begin(dat),
                                  std::begin(dat) + 16),
                   transferred);

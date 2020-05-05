@@ -118,7 +118,7 @@ while true; do
         gcc|clang) COMPILER=$2 ;;
         *) red_echo $USAGE_STR && exit 1 ;;
       esac; shift 2 ;;
-    -h|--help) usage_help ;;
+    -h|--help) green_echo $USAGE_STR && exit 0 ;;
     *) break ;;
   esac
 done
