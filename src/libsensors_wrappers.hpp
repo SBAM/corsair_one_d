@@ -12,7 +12,7 @@ namespace cod
 
   /**
    * @brief This class searches for coretemp inputs returned by libsensors
-   *        and provides an max-coretemp getter.
+   *        and provides a max-coretemp getter.
    */
   class sensors_wrapper
   {

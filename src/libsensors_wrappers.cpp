@@ -27,7 +27,7 @@ namespace cod
         {
           if (sfeat->type == SENSORS_SUBFEATURE_TEMP_INPUT &&
               sfeat->flags & SENSORS_MODE_R)
-            coretemp_sfeats_.push_back(std::make_pair(dc, sfeat));
+            coretemp_sfeats_.push_back({ dc, sfeat });
         }
       }
     }
@@ -35,7 +35,7 @@ namespace cod
       throw std::runtime_error("no coretemp returned by libsensors, "
                                "this might be fixed with sensors-detect");
     else
-      spdlog::debug("libsensors returned {d} coretemp sub-features",
+      spdlog::debug("libsensors returned {:d} coretemp sub-features",
                     coretemp_sfeats_.size());
   }
 
@@ -50,10 +50,10 @@ namespace cod
   {
     spdlog::debug("querying max coretemp");
     std::optional<double> res;
-    for (auto& curr : coretemp_sfeats_)
+    for (auto& [chip, sfeat] : coretemp_sfeats_)
     {
       double tmp {};
-      auto gv_res = sensors_get_value(curr.first, curr.second->number, &tmp);
+      auto gv_res = sensors_get_value(chip, sfeat->number, &tmp);
       if (gv_res == 0)
         res = (res ? std::max(*res, tmp) : tmp);
     }

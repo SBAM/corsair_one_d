@@ -100,6 +100,10 @@ namespace cod
                          const src_loc& loc = src_loc::current());
 
 
+  /**
+   * @brief Stores internally USB devices handles and provides
+   *        description/handle getters that filter by vendor ID and product ID.
+   */
   class devices_wrapper
   {
   public:

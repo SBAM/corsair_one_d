@@ -69,7 +69,7 @@ namespace cod
     std::uint8_t endpoint =
       static_cast<std::uint8_t>(LIBUSB_ENDPOINT_IN) |        // 0x80
       static_cast<std::uint8_t>(LIBUSB_RECIPIENT_INTERFACE); // 0x01
-    std::size_t attempts = 5;
+    std::size_t attempts = 3;
     int ret {};
     while (attempts-- > 0)
     {

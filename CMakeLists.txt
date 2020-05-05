@@ -10,7 +10,7 @@ message("-- cmake toolchain file = ${CMAKE_TOOLCHAIN_FILE}")
 # select C++20 as standard
 set(CMAKE_CXX_STANDARD 20)
 
-# check position independent support (-fPIC)
+# check position independent code into executables support (-fPIE)
 include(CheckPIESupported)
 check_pie_supported(OUTPUT_VARIABLE PIE_MSG
   LANGUAGES CXX)
