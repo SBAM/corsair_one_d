@@ -14,8 +14,12 @@ target_compile_definitions(corsair_one_d
 
 target_link_libraries(corsair_one_d
   PRIVATE
+    Boost::program_options
     Boost::system
     libsensors::libsensors
     PkgConfig::libusb
     spdlog::spdlog
     Threads::Threads)
+
+install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/corsair_one_d
+  DESTINATION ${CMAKE_INSTALL_FULL_BINDIR})

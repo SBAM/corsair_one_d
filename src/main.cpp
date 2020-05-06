@@ -1,13 +1,47 @@
 #include <cstdlib>
+#include <iostream>
+
+#include <boost/program_options.hpp>
 
 #include "daemon.hpp"
+
+namespace po = boost::program_options;
 
 constexpr int EXIT_RESTART = EXIT_FAILURE;
 constexpr int EXIT_PREVENT_RESTART = 2;
 
-int main()
+int main(int argc, const char* argv[])
 {
-  log_guard lg;
+  // manage command line
+  bool help_requested = false;
+  bool daemon_mode = false;
+  po::options_description opt_desc("CorsairOneDaemon options");
+  opt_desc.add_options()
+    ("help,h", "CorsairOneDaemon usage")
+    ("daemon,d", "daemon (background) mode");
+  po::variables_map vm;
+  try
+  {
+    po::store(po::parse_command_line(argc, argv, opt_desc), vm);
+    daemon_mode = (vm.count("daemon") > 0);
+    help_requested = (vm.count("help") > 0);
+  }
+  catch (const std::exception& e)
+  {
+    std::cerr << e.what() << std::endl;
+    return EXIT_PREVENT_RESTART;
+  }
+  // intialize log_guard
+  log_guard lg(daemon_mode);
+  // dump help and exit if requested
+  if (help_requested)
+  {
+    lg.quiet_exit(true);
+    spdlog::info("{}", opt_desc);
+    return EXIT_SUCCESS;
+  }
+  else
+    spdlog::info("daemon_mode={}", daemon_mode);
   try
   {
     cod::sensors_wrapper sw;

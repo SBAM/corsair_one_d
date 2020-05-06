@@ -1,0 +1,3 @@
+# match 1b1c:0c04 Corsair Link Cooling Node
+SUBSYSTEM=="usb", ATTR{idVendor}=="1b1c", ATTR{idProduct}=="0c04", \
+TAG+="systemd", ENV{SYSTEMD_WANTS}+="CorsairOneDaemon.service"

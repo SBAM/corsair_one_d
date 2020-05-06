@@ -3,6 +3,7 @@
 
 # include <spdlog/spdlog.h>
 # include <spdlog/fmt/bin_to_hex.h>
+# include <spdlog/fmt/ostr.h>
 # include <spdlog/sinks/sink.h>
 
 /// @brief Manages logs
@@ -10,7 +11,7 @@ class log_guard
 {
 public:
   /// @brief Initializes default logger
-  log_guard();
+  log_guard(bool daemon_mode);
   /// @brief Dumps backtrace in all sinks
   ~log_guard();
   log_guard(const log_guard&) = delete;
@@ -20,6 +21,7 @@ public:
   void quiet_exit(bool qe);
 
 private:
+  bool daemon_mode_; ///< defines how sinks should be configured
   bool quiet_exit_; ///< defines behavior upon destruction
 };
 
