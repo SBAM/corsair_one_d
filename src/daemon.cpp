@@ -8,15 +8,18 @@ namespace cod
                  double coretemp_threshold,
                  double coolant_temp_threshold,
                  sc::duration low_speed_delay,
-                 sc::duration max_speed_delay) :
+                 sc::duration max_speed_delay,
+                 std::size_t max_consecutive_failures) :
     sw_(sw),
     dev_hdl_(dev_hdl),
     coretemp_threshold_(coretemp_threshold),
     coolant_temp_threshold_(coolant_temp_threshold),
     low_speed_delay_(low_speed_delay),
     max_speed_delay_(max_speed_delay),
+    max_error_count_(max_consecutive_failures),
     work_(std::make_unique<bio_work_guard>(bio::make_work_guard(ctx_))),
     timer_(ctx_),
+    error_count_(0),
     abort_(false),
     eptr_(nullptr)
   {
@@ -87,9 +90,8 @@ namespace cod
         try
         {
           // check coretemp first, most likely will exceed threshold first
-          std::optional<double> core_temp;
-          if (core_temp = sw_.get_max_coretemp();
-              core_temp.has_value())
+          auto core_temp = sw_.get_max_coretemp();
+          if (core_temp.has_value())
           {
             if (*core_temp > coretemp_threshold_)
             {
@@ -98,6 +100,7 @@ namespace cod
                            "==> set max top fan speed",
                            *core_temp, coretemp_threshold_);
               set_top_fan_max_speed<defs>(dev_hdl_);
+              error_count_ = 0; // reset consecutive error count
               schedule_timer(max_speed_delay_);
               return;
             }
@@ -105,9 +108,9 @@ namespace cod
           else
             spdlog::warn("failed to actualize coretemp");
           // then check coolant temperature
-          std::optional<double> cool_temp;
-          if (cool_temp = get_coolant_temp<defs>(dev_hdl_);
-              cool_temp.has_value())
+          auto cool_temp = get_coolant_temp<defs>(dev_hdl_);
+          error_count_ = 0;
+          if (cool_temp.has_value())
           {
             if (*cool_temp > coolant_temp_threshold_)
             {
@@ -116,6 +119,7 @@ namespace cod
                            "==> set max top fan speed",
                            *cool_temp, coolant_temp_threshold_);
               set_top_fan_max_speed<defs>(dev_hdl_);
+              error_count_ = 0;
               schedule_timer(max_speed_delay_);
               return;
             }
@@ -131,7 +135,13 @@ namespace cod
         }
         catch (const std::exception& e)
         {
-          spdlog::warn("timer callback exception={}", e.what());
+          if (++error_count_ < max_error_count_)
+            spdlog::warn("timer callback exception={}", e.what());
+          else
+          {
+            spdlog::warn("max consecutive error count reached");
+            throw; // too many failures, stop process
+          }
         }
         schedule_timer(100ms); // something went wrong, fast reschedule
       };

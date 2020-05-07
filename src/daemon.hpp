@@ -42,13 +42,16 @@ namespace cod
      *                        is running at low speed
      * @param max_speed_delay rechecks coolant temperature delay, used when fan
      *                        is running at max speed
+     * @param max_consecutive_failures caps max consecutive failures due to
+     *                                 link messaging's calls
      */
     daemon(const sensors_wrapper& sw,
            const libusb_dev_hdl_uptr& dev_hdl,
            double coretemp_threshold,
            double coolant_temp_threshold,
            sc::duration low_speed_delay,
-           sc::duration max_speed_delay);
+           sc::duration max_speed_delay,
+           std::size_t max_consecutive_failures);
     /// @brief invokes stop()
     ~daemon();
 
@@ -67,10 +70,12 @@ namespace cod
     const double coolant_temp_threshold_; ///< coolant temperature threshold
     const sc::duration low_speed_delay_; ///< fan low speed recheck delay
     const sc::duration max_speed_delay_; ///< fan max speed delay
+    const std::size_t max_error_count_; ///< max consecutive errors
     bio::io_context ctx_; ///< asio context
     work_guard_uptr work_; ///< context's work
     bio::steady_timer timer_; ///< delayed tasks timer
     std::thread thread_; ///< reactor thread
+    std::size_t error_count_; ///< current consecutive errors
     bool abort_; ///< abort flag, true upon stop request
     std::exception_ptr eptr_; ///< stores execption thrown by daemon
   };

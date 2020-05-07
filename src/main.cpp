@@ -79,7 +79,7 @@ int main(int argc, const char* argv[])
       spdlog::warn("device has no temperature sensor");
       return EXIT_RESTART;
     }
-    cod::daemon codd(sw, dev_hdl, 60, 40, 2s, 10s);
+    cod::daemon codd(sw, dev_hdl, 60, 40, 2s, 10s, 5);
     codd.start();
     cod::sig::wait();
     try
