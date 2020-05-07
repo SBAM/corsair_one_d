@@ -84,28 +84,28 @@ namespace cod
       {
         if (abort_ || ec == bio::error::operation_aborted)
           return;
-        // check coretemp first, most likely will exceed threshold first
-        std::optional<double> core_temp;
-        if (core_temp = sw_.get_max_coretemp();
-            core_temp.has_value())
-        {
-          if (*core_temp > coretemp_threshold_)
-          {
-            spdlog::info("threshold exceeded, "
-                         "core={:.2f}C > (max={:.2f}C) "
-                         "==> set max top fan speed",
-                         *core_temp, coretemp_threshold_);
-            set_top_fan_max_speed<defs>(dev_hdl_);
-            schedule_timer(max_speed_delay_);
-            return;
-          }
-        }
-        else
-          spdlog::warn("failed to actualize coretemp");
-        // then check coolant temperature
-        std::optional<double> cool_temp;
         try
         {
+          // check coretemp first, most likely will exceed threshold first
+          std::optional<double> core_temp;
+          if (core_temp = sw_.get_max_coretemp();
+              core_temp.has_value())
+          {
+            if (*core_temp > coretemp_threshold_)
+            {
+              spdlog::info("threshold exceeded, "
+                           "coretemp={:.2f}C > (max={:.2f}C) "
+                           "==> set max top fan speed",
+                           *core_temp, coretemp_threshold_);
+              set_top_fan_max_speed<defs>(dev_hdl_);
+              schedule_timer(max_speed_delay_);
+              return;
+            }
+          }
+          else
+            spdlog::warn("failed to actualize coretemp");
+          // then check coolant temperature
+          std::optional<double> cool_temp;
           if (cool_temp = get_coolant_temp<defs>(dev_hdl_);
               cool_temp.has_value())
           {
@@ -122,16 +122,18 @@ namespace cod
           }
           else
             spdlog::warn("failed to actualize coolant temperature");
+          // both temperatures were retrieved and below thresholds
+          if (core_temp.has_value() && cool_temp.has_value())
+          {
+            schedule_timer(low_speed_delay_);
+            return;
+          }
         }
         catch (const std::exception& e)
         {
-          spdlog::warn("failed to grab coolant temperature [{}]", e.what());
+          spdlog::warn("timer callback exception={}", e.what());
         }
-        // both temperatures were retrieved and below thresholds
-        if (core_temp.has_value() && cool_temp.has_value())
-          schedule_timer(low_speed_delay_);
-        else
-          schedule_timer(100ms); // fast reschedule
+        schedule_timer(100ms); // something went wrong, fast reschedule
       };
     timer_.async_wait(std::move(cb));
   }

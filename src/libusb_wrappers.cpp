@@ -56,7 +56,7 @@ namespace cod
        0x0000, // interface index
        dat.data(), // payload
        static_cast<std::uint16_t>(dat.size()), // payload length
-       1000); // 1s timeout
+       500); // 500ms timeout
     if (ret < 0)
       make_lusb_error(ret, loc);
   }
@@ -69,27 +69,17 @@ namespace cod
     std::uint8_t endpoint =
       static_cast<std::uint8_t>(LIBUSB_ENDPOINT_IN) |        // 0x80
       static_cast<std::uint8_t>(LIBUSB_RECIPIENT_INTERFACE); // 0x01
-    std::size_t attempts = 3;
-    int ret {};
-    while (attempts-- > 0)
-    {
-      ret = libusb_interrupt_transfer
-        (dev_hdl.get(), // device handle
-         endpoint, // endpoint
-         dat.data(), // payload
-         static_cast<std::uint16_t>(dat.size()), // payload length,
-         &transferred, // bytes transferred,
-         1000); // 1s timeout
-      spdlog::trace("  <<<< {:pn}... read_size={}",
-                    spdlog::to_hex(std::begin(dat),
-                                   std::begin(dat) + 16),
-                    transferred);
-      if (ret == LIBUSB_SUCCESS)
-        break;
-      else
-        if (attempts > 0)
-          spdlog::warn("{}", make_lusb_error_str(ret, loc));
-    }
+    auto ret = libusb_interrupt_transfer
+      (dev_hdl.get(), // device handle
+       endpoint, // endpoint
+       dat.data(), // payload
+       static_cast<std::uint16_t>(dat.size()), // payload length,
+       &transferred, // bytes transferred,
+       500); // 500ms timeout
+    spdlog::trace("  <<<< {:pn}... read_size={}",
+                  spdlog::to_hex(std::begin(dat),
+                                 std::begin(dat) + 16),
+                  transferred);
     if (ret < 0)
       make_lusb_error(ret, loc);
     return transferred;
