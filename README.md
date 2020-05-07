@@ -1,6 +1,7 @@
 # CorsairOne daemon
 
-Simple daemon that manages CorsairOne fan.
+If `coretemp` (max temperature across all CPU cores) or `coolant temperature` (liquid circuit temperature) exceeds pre-defined thresholds, the daemon requests internal _CorsairOne_'s USB device to increase fan speed.
+
 Upon installation:
 * a custom *udev* rule is added to `/usr/lib/udev/rules.d/` (`pkg-config udev -> udevdir`)
 * a custom *systemd unit* is added to `/usr/lib/systemd/system` (`pkg-config systemd -> systemdsystemunitdir`)
