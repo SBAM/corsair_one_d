@@ -24,18 +24,20 @@ $ dnf install cmake gcc-c++ pkg-config boost-devel libusb-devel lm_sensors-devel
 ```
 
 ## Build and install
-```shell
-$ git clone https://github.com/SBAM/corsair_one_d.git
-$ cd corsair_one_d
-$ ./configure.sh
-$ make -C build/Release
-$ sudo make -C build/Release install
-# reload systemd's configuration
-$ sudo systemctl daemon-reload
-# Signal udevd to reload the rules files
-$ sudo udevadm control --reload-rules
-# Request device events from the kernel for sysfs usb
-$ sudo udevadm trigger --attr-match=subsystem=usb
+```console
+user@mach:~$ git clone https://github.com/SBAM/corsair_one_d.git
+user@mach:~$ cd corsair_one_d
+user@mach:~$ ./configure.sh
+user@mach:~$ make -C build/Release
+user@mach:~$ sudo make -C build/Release install
+## reload systemd's configuration
+user@mach:~$ sudo systemctl daemon-reload
+## simulate corsair's USB device connected
+user@mach:~$ sudo udevadm trigger --attr-match=subsystem=usb --attr-match=idVendor=1b1c --action=add
+## check systemd service succesfully started
+user@mach:~$ journalctl -f
+[...] systemd[1]: Started CorsairOne daemon.
+[...] audit[1]: SERVICE_START [...] msg='unit=CorsairOneDaemon comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
 ```
 
 ## Acknowledgments

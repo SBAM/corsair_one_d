@@ -1,6 +1,7 @@
 [Unit]
 Description=CorsairOne daemon
 Documentation=https://github.com/SBAM/corsair_one_d
+StopWhenUnneeded=true
 
 [Service]
 Type=simple
