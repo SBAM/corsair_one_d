@@ -21,7 +21,6 @@ public:
   void quiet_exit(bool qe);
 
 private:
-  bool daemon_mode_; ///< defines how sinks should be configured
   bool quiet_exit_; ///< defines behavior upon destruction
 };
 

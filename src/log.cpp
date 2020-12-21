@@ -3,7 +3,6 @@
 #include <spdlog/sinks/syslog_sink.h>
 
 log_guard::log_guard(bool daemon_mode) :
-  daemon_mode_(daemon_mode),
   quiet_exit_(false)
 {
   std::vector<spdlog::sink_ptr> sinks;
