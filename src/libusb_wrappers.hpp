@@ -8,7 +8,8 @@
 # include <stdexcept>
 # include <vector>
 
-# if __has_include(<source_location>)
+# if __has_include(<source_location>) &&        \
+     __has_builtin(__builtin_source_location)
 #  include <source_location>
 using src_loc = std::source_location;
 # else
