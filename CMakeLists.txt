@@ -1,5 +1,4 @@
-# CMP0083 PIE policy introduced in 3.14
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.22)
 
 project(corsair_one_d
   DESCRIPTION "CorsairOne daemon"
@@ -16,6 +15,17 @@ check_pie_supported(OUTPUT_VARIABLE PIE_MSG
   LANGUAGES CXX)
 if (NOT CMAKE_CXX_LINK_PIE_SUPPORTED)
   message(FATAL_ERROR "Linker with PIE capabilities required: ${PIE_MSG}")
+endif()
+
+# check link-time-optimisation support (-flto)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_SUPPORTED
+  OUTPUT IPO_MSG
+  LANGUAGES CXX)
+if (NOT IPO_SUPPORTED)
+  message(WARNING "LTO not supported: ${IPO_MSG}")
+else()
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 endif()
 
 # expose GNU standard installation directories
@@ -46,6 +56,6 @@ find_package(Threads REQUIRED)
 find_package(Udev)
 
 # Project sources
-add_subdirectory(src/)
+add_subdirectory(src)
 # systemd unit deploy
-add_subdirectory(systemd/)
+add_subdirectory(systemd)

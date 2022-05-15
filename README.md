@@ -19,7 +19,7 @@ Upon installation:
 * [lm\_sensors](https://hwmon.wiki.kernel.org/lm_sensors)
 * [spdlog](https://github.com/gabime/spdlog)
 
-> Fedora 34 setup
+> Fedora 36 setup
 ```shell
 $ dnf install cmake gcc-c++ pkg-config boost-devel libusb-devel lm_sensors-devel spdlog-devel
 ```
